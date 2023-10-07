@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpStatus,
@@ -74,6 +75,10 @@ export class AuthController {
     refreshToken: string,
     @Res() res: Response,
   ) {
+    if (!refreshToken) {
+      throw new BadRequestException('Missing token in request cookies.');
+    }
+
     await this.authService.logout(refreshToken);
 
     res.cookie(REFRESH_TOKEN_COOKIE_NAME, '', {

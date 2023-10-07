@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { typeOrmModuleOptions } from './config';
 import { UsersModule } from './users/users.module';
+import { MeModule } from './me/me.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
+    MeModule,
   ],
   providers: [
     {

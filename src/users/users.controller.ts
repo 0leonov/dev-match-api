@@ -13,6 +13,7 @@ import {
   ClassSerializerInterceptor,
   UseGuards,
 } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 
 import { CurrentUser, Roles } from '../auth/decorators';
 import { RolesGuard } from '../auth/guards/role.guard';
@@ -27,6 +28,14 @@ import { UsersService } from './users.service';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('me')
+  @UseInterceptors(ClassSerializerInterceptor)
+  async me(@CurrentUser('sub') currentUserId: string) {
+    const user = await this.usersService.findOne(currentUserId);
+
+    return new UserResponse(user);
+  }
 
   @Post()
   @UseGuards(RolesGuard)
@@ -47,10 +56,12 @@ export class UsersController {
     return users.map((user) => new UserResponse(user));
   }
 
-  @Get(':username')
+  @Get(':idOrUsername')
   @UseInterceptors(ClassSerializerInterceptor)
-  async findOne(@Param('username') username: string) {
-    const user = await this.usersService.findOne(username);
+  async findOne(@Param('idOrUsername') idOrUsername: string) {
+    const user = isUUID(idOrUsername, 4)
+      ? await this.usersService.findOne(idOrUsername)
+      : await this.usersService.findOneByUsername(idOrUsername);
 
     return new UserResponse(user);
   }

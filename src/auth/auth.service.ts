@@ -35,22 +35,13 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email);
-
-    if (!user) {
+    try {
+      const user = await this.usersService.findOneByEmail(loginDto.email);
+      await this.validatePassword(loginDto.password, user.password);
+      return this.generateTokens(user);
+    } catch (NotFoundException) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
-
-    const isPasswordMatches = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
-
-    if (!isPasswordMatches) {
-      throw new UnauthorizedException('Incorrect email or password.');
-    }
-
-    return this.generateTokens(user);
   }
 
   async logout(token: string) {
@@ -99,7 +90,7 @@ export class AuthService {
   }
 
   private async generateAccessToken(user: User) {
-    const payload = { sub: user.id, email: user.email, roles: user.roles };
+    const payload = { sub: user.id, roles: user.roles };
 
     const accessToken = await this.jwtService.signAsync(payload);
 
@@ -114,5 +105,19 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  private async validatePassword(
+    enteredPassword: string,
+    userPassword: string,
+  ): Promise<void> {
+    const isPasswordMatches = await bcrypt.compare(
+      enteredPassword,
+      userPassword,
+    );
+
+    if (!isPasswordMatches) {
+      throw new UnauthorizedException('Incorrect email or password.');
+    }
   }
 }
