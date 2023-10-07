@@ -9,6 +9,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { jwtModuleOptions } from './config/jwt-module-options';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { Guards } from './guards';
+import { Strategies } from './strategies';
 
 @Module({
   imports: [
@@ -22,6 +24,6 @@ import { RefreshToken } from './entities/refresh-token.entity';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, ...Strategies, ...Guards],
 })
 export class AuthModule {}

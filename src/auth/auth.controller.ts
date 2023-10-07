@@ -14,11 +14,13 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
 import { Cookie } from './decorators/cookie.decorator';
+import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token';
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(
