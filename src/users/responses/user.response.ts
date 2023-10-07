@@ -5,18 +5,25 @@ import { UserRole } from '../entities/user-role.enum';
 import { User } from '../entities/user.entity';
 
 export class UserResponse implements User {
-  createdAt: Date;
-  email: string;
   id: string;
+  username: string;
   name: string;
+  roles: UserRole[];
+
+  @Exclude()
+  createdAt: Date;
+
+  @Exclude()
+  email: string;
 
   @Exclude()
   password: string;
 
+  @Exclude()
   refreshTokens: RefreshToken[];
-  roles: UserRole[];
+
+  @Exclude()
   updatedAt: Date;
-  username: string;
 
   constructor(user: User) {
     Object.assign(this, user);

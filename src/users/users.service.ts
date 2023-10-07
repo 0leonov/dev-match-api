@@ -118,7 +118,7 @@ export class UsersService {
       );
     }
 
-    const password = updateUserDto.password
+    const password = updateUserDto?.password
       ? await this.hashPassword(updateUserDto.password)
       : user.password;
 

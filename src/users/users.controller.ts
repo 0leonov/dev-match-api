@@ -9,9 +9,9 @@ import {
   ValidationPipe,
   UsePipes,
   ParseUUIDPipe,
+  UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
-  UseGuards,
 } from '@nestjs/common';
 import { isUUID } from 'class-validator';
 
@@ -29,56 +29,53 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('me')
-  @UseInterceptors(ClassSerializerInterceptor)
-  async me(@CurrentUser('sub') currentUserId: string) {
-    const user = await this.usersService.findOne(currentUserId);
-
-    return new UserResponse(user);
-  }
-
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  @UseInterceptors(ClassSerializerInterceptor)
   @UsePipes(new ValidationPipe())
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
-
-    return new UserResponse(user);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
-  async findAll() {
+  async findAll(@CurrentUser('roles') currentUserRoles: string) {
     const users = await this.usersService.findAll();
 
-    return users.map((user) => new UserResponse(user));
+    return currentUserRoles.includes(UserRole.ADMIN)
+      ? users
+      : users.map((user) => new UserResponse(user));
   }
 
   @Get(':idOrUsername')
   @UseInterceptors(ClassSerializerInterceptor)
-  async findOne(@Param('idOrUsername') idOrUsername: string) {
+  async findOne(
+    @Param('idOrUsername') idOrUsername: string,
+    @CurrentUser('roles') currentUserRoles: string,
+  ) {
     const user = isUUID(idOrUsername, 4)
       ? await this.usersService.findOne(idOrUsername)
       : await this.usersService.findOneByUsername(idOrUsername);
 
-    return new UserResponse(user);
+    return currentUserRoles.includes(UserRole.ADMIN)
+      ? user
+      : new UserResponse(user);
   }
 
   @Patch(':id')
-  @UseInterceptors(ClassSerializerInterceptor)
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async update(
+  update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = await this.usersService.update(id, updateUserDto);
-
-    return new UserResponse(user);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   remove(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() currentUser: JwtPayload,

@@ -1,28 +1,37 @@
 import {
-  ClassSerializerInterceptor,
+  Body,
   Controller,
   Get,
-  UseInterceptors,
+  Patch,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { CurrentUser } from '../auth/decorators';
-import { UserResponse } from '../users/responses';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { UsersService } from '../users/users.service';
-
-import { MeService } from './me.service';
 
 @Controller('me')
 export class MeController {
-  constructor(
-    private readonly meService: MeService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseInterceptors(ClassSerializerInterceptor)
   async getProfile(@CurrentUser('sub') currentUserId: string) {
     const user = await this.usersService.findOne(currentUserId);
+    user.password = undefined;
 
-    return new UserResponse(user);
+    return user;
+  }
+
+  @Patch()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async update(
+    @CurrentUser('sub') currentUserId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const user = await this.usersService.update(currentUserId, updateUserDto);
+    user.password = undefined;
+
+    return user;
   }
 }
