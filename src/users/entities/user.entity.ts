@@ -2,16 +2,19 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 
 import { UserRole } from './user-role.enum';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true, type: 'citext' })
   email: string;
@@ -32,6 +35,9 @@ export class User {
     default: [UserRole.USER],
   })
   roles: UserRole[];
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.userId)
+  refreshTokens: RefreshToken[];
 
   @CreateDateColumn()
   createdAt: Date;

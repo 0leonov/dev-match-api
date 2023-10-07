@@ -18,10 +18,6 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  private async hashPassword(password: string) {
-    return await bcrypt.hash(password, 10);
-  }
-
   async create(createUserDto: CreateUserDto) {
     const isEmailTaken = !!(await this.usersRepository.findOne({
       where: { email: createUserDto.email },
@@ -57,23 +53,55 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.usersRepository.findOne({ where: { id } });
 
     if (!user) {
-      throw new NotFoundException(`User id #${id} not found.`);
+      throw new NotFoundException(`User id ${id} not found.`);
     }
 
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async findOneByEmail(email: string) {
+    const user = await this.usersRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    return user;
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.findOne({
       where: { id },
     });
 
     if (!user) {
-      throw new NotFoundException(`User id #${id} not found.`);
+      throw new NotFoundException(`User id ${id} not found.`);
+    }
+
+    if (
+      updateUserDto.email &&
+      (await this.usersRepository.findOne({
+        where: { email: updateUserDto.email },
+      }))
+    ) {
+      throw new ConflictException(
+        `Email ${updateUserDto.email} is already taken.`,
+      );
+    }
+
+    if (
+      updateUserDto.username &&
+      (await this.usersRepository.findOne({
+        where: { username: updateUserDto.username },
+      }))
+    ) {
+      throw new ConflictException(
+        `Username ${updateUserDto.username} is already taken.`,
+      );
     }
 
     const password = updateUserDto.password
@@ -87,13 +115,17 @@ export class UsersService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const user = await this.usersRepository.delete({ id });
 
     if (user.affected === 0) {
-      throw new NotFoundException(`User id #${id} not found.`);
+      throw new NotFoundException(`User id ${id} not found.`);
     }
 
-    return { message: `User id #${id} has been deleted.` };
+    return { message: `User id ${id} has been deleted.` };
+  }
+
+  private async hashPassword(password: string) {
+    return await bcrypt.hash(password, 10);
   }
 }
