@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,8 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
+import { JwtPayload } from '../auth/interfaces';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRole } from './entities/user-role.enum';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -115,10 +119,14 @@ export class UsersService {
     });
   }
 
-  async remove(id: string) {
-    const user = await this.usersRepository.delete({ id });
+  async remove(id: string, currentUser: JwtPayload) {
+    if (!currentUser.roles.includes(UserRole.ADMIN) && id !== currentUser.sub) {
+      throw new ForbiddenException();
+    }
 
-    if (user.affected === 0) {
+    const deleteResult = await this.usersRepository.delete({ id });
+
+    if (deleteResult.affected === 0) {
       throw new NotFoundException(`User id ${id} not found.`);
     }
 

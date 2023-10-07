@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  HttpStatus,
   Post,
   Res,
   UnauthorizedException,
@@ -13,8 +14,7 @@ import { Response } from 'express';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
 import { AuthService } from './auth.service';
-import { Cookie } from './decorators/cookie.decorator';
-import { Public } from './decorators/public.decorator';
+import { Cookie, Public } from './decorators';
 import { LoginDto } from './dto/login.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 
@@ -66,6 +66,25 @@ export class AuthController {
     this.setRefreshToken(refreshToken, res);
 
     res.status(200).json({ accessToken });
+  }
+
+  @Post('logout')
+  async logout(
+    @Cookie(REFRESH_TOKEN_COOKIE_NAME)
+    refreshToken: string,
+    @Res() res: Response,
+  ) {
+    await this.authService.logout(refreshToken);
+
+    res.cookie(REFRESH_TOKEN_COOKIE_NAME, '', {
+      httpOnly: true,
+      sameSite: 'lax',
+      expires: new Date(),
+      secure: true,
+      path: '/',
+    });
+
+    res.sendStatus(HttpStatus.OK);
   }
 
   private setRefreshToken(refreshToken: RefreshToken, res: Response) {

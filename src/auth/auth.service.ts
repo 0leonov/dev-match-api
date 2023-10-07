@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -49,7 +53,15 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async signOut() {}
+  async logout(token: string) {
+    const deleteResult = await this.refreshTokensRepository.delete({ token });
+
+    if (deleteResult.affected === 0) {
+      throw new NotFoundException(`Token ${token} not found.`);
+    }
+
+    return { message: `Token ${token} has been deleted.` };
+  }
 
   async refresh(refreshToken: string) {
     const token = await this.refreshTokensRepository.findOne({
