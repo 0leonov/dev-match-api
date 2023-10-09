@@ -10,9 +10,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { plainToClass } from 'class-transformer';
 import { Response } from 'express';
 
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { User } from '../users/entities/user.entity';
+import { CurrentUserResponse } from '../users/responses/current-user.response';
 
 import { AuthService } from './auth.service';
 import { Cookie, Public } from './decorators';
@@ -32,23 +35,19 @@ export class AuthController {
   @Post('login')
   @UsePipes(new ValidationPipe())
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
-    const { accessToken, refreshToken } =
+    const { refreshToken, accessToken, user } =
       await this.authService.login(loginDto);
 
-    this.setRefreshToken(refreshToken, res);
-
-    res.status(200).json({ accessToken });
+    this.returnUser(user, refreshToken, accessToken, res);
   }
 
   @Post('register')
   @UsePipes(new ValidationPipe())
   async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    const { accessToken, refreshToken } =
+    const { refreshToken, accessToken, user } =
       await this.authService.register(createUserDto);
 
-    this.setRefreshToken(refreshToken, res);
-
-    res.status(200).json({ accessToken });
+    this.returnUser(user, refreshToken, accessToken, res);
   }
 
   @Post('refresh')
@@ -101,5 +100,18 @@ export class AuthController {
         this.configService.get('NODE_ENV', 'development') === 'production',
       path: '/',
     });
+  }
+
+  private returnUser(
+    user: User,
+    refreshToken: RefreshToken,
+    accessToken: string,
+    res: Response,
+  ) {
+    this.setRefreshToken(refreshToken, res);
+
+    res
+      .status(200)
+      .json({ accessToken, user: plainToClass(CurrentUserResponse, user) });
   }
 }

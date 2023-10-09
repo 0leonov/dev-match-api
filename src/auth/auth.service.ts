@@ -31,14 +31,18 @@ export class AuthService {
   async register(createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
 
-    return this.generateTokens(user);
+    const tokens = await this.generateTokens(user);
+    return { ...tokens, user: { ...user } };
   }
 
   async login(loginDto: LoginDto) {
     try {
       const user = await this.usersService.findOneByEmail(loginDto.email);
+
       await this.validatePassword(loginDto.password, user.password);
-      return this.generateTokens(user);
+
+      const tokens = await this.generateTokens(user);
+      return { ...tokens, user: { ...user } };
     } catch (NotFoundException) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
@@ -48,10 +52,8 @@ export class AuthService {
     const deleteResult = await this.refreshTokensRepository.delete({ token });
 
     if (deleteResult.affected === 0) {
-      throw new NotFoundException(`Token ${token} not found.`);
+      throw new NotFoundException();
     }
-
-    return { message: `Token ${token} has been deleted.` };
   }
 
   async refresh(refreshToken: string) {

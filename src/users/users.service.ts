@@ -87,7 +87,22 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    currentUser: JwtPayload,
+    updateUserDto: UpdateUserDto,
+  ) {
+    const isAdmin = currentUser.roles.includes(UserRole.ADMIN);
+
+    console.log(updateUserDto);
+
+    if (
+      (!isAdmin && id !== currentUser.sub) ||
+      (!isAdmin && updateUserDto.roles)
+    ) {
+      throw new ForbiddenException();
+    }
+
     const user = await this.usersRepository.findOne({
       where: { id },
     });

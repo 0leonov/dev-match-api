@@ -6,7 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { typeOrmModuleOptions } from './config';
-import { MeModule } from './me/me.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -19,7 +18,6 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
-    MeModule,
   ],
   providers: [
     {
