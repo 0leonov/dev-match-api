@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { CurrentUserResponse } from '../../users/responses/current-user.response';
+import { CurrentUserResponse } from '../../users/responses';
 
 export class AuthenticatedUserResponse {
   @ApiProperty({

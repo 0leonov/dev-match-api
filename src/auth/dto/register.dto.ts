@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, Matches, MaxLength, MinLength } from 'class-validator';
 
-import { RegistrationData } from '../../users/interfaces/registration-data';
+import { RegistrationData } from '../../users/interfaces';
 
 export class RegisterDto implements RegistrationData {
   @ApiProperty({

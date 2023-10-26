@@ -5,8 +5,9 @@ import {
   ApiConflictResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
-import { TokensResponse } from '../responses/tokens.response';
+
 import { AuthenticatedUserResponse } from '../responses/authenticated-user.response';
+import { TokensResponse } from '../responses/tokens.response';
 
 export function ApiOperationLogin() {
   return function (
