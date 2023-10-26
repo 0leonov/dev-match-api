@@ -15,5 +15,12 @@ export const typeOrmModuleOptions = (
     synchronize: true,
     entities: [__dirname + '/../**/*.entity{.js,.ts}'],
     namingStrategy: new SnakeNamingStrategy(),
+    ssl: { rejectUnauthorized: false },
+    extra: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
   };
 };
