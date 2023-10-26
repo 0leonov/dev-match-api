@@ -11,11 +11,11 @@ import * as moment from 'moment';
 import { Repository } from 'typeorm';
 import { v4 } from 'uuid';
 
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
@@ -27,14 +27,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
-
-  async register(createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
-
-    const tokens = await this.generateTokens(user);
-    return { ...tokens, user: { ...user } };
-  }
-
   async login(loginDto: LoginDto) {
     try {
       const user = await this.usersService.findOneByEmail(loginDto.email);
@@ -42,18 +34,17 @@ export class AuthService {
       await this.validatePassword(loginDto.password, user.password);
 
       const tokens = await this.generateTokens(user);
-      return { ...tokens, user: { ...user } };
+      return { ...tokens, user };
     } catch (NotFoundException) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
   }
 
-  async logout(token: string) {
-    const deleteResult = await this.refreshTokensRepository.delete({ token });
+  async register(createUserDto: RegisterDto) {
+    const user = await this.usersService.create(createUserDto);
 
-    if (deleteResult.affected === 0) {
-      throw new NotFoundException();
-    }
+    const tokens = await this.generateTokens(user);
+    return { ...tokens, user };
   }
 
   async refresh(refreshToken: string) {
@@ -74,6 +65,14 @@ export class AuthService {
     const user = await this.usersService.findOne(token.userId);
 
     return this.generateTokens(user);
+  }
+
+  async logout(token: string) {
+    const deleteResult = await this.refreshTokensRepository.delete({ token });
+
+    if (deleteResult.affected === 0) {
+      throw new NotFoundException();
+    }
   }
 
   private async generateRefreshToken(userId: string) {

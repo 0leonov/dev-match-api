@@ -10,20 +10,29 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
 import { Response } from 'express';
 
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '../users/entities/user.entity';
-import { CurrentUserResponse } from '../users/responses/current-user.response';
+import { CurrentUserResponse } from '../users/responses';
 
 import { AuthService } from './auth.service';
-import { Cookie, Public } from './decorators';
+import {
+  ApiOperationLogin,
+  ApiOperationLogout,
+  ApiOperationRefresh,
+  ApiOperationRegister,
+  Cookie,
+  Public,
+} from './decorators';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token';
 
+@ApiTags('auth')
 @Public()
 @Controller('auth')
 export class AuthController {
@@ -32,6 +41,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @ApiOperationLogin()
   @Post('login')
   @UsePipes(new ValidationPipe())
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
@@ -41,15 +51,17 @@ export class AuthController {
     this.returnUser(user, refreshToken, accessToken, res);
   }
 
+  @ApiOperationRegister()
   @Post('register')
   @UsePipes(new ValidationPipe())
-  async register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+  async register(@Body() createUserDto: RegisterDto, @Res() res: Response) {
     const { refreshToken, accessToken, user } =
       await this.authService.register(createUserDto);
 
     this.returnUser(user, refreshToken, accessToken, res);
   }
 
+  @ApiOperationRefresh()
   @Post('refresh')
   async refresh(
     @Cookie(REFRESH_TOKEN_COOKIE_NAME)
@@ -68,6 +80,7 @@ export class AuthController {
     res.status(200).json({ accessToken });
   }
 
+  @ApiOperationLogout()
   @Post('logout')
   async logout(
     @Cookie(REFRESH_TOKEN_COOKIE_NAME)
@@ -80,13 +93,7 @@ export class AuthController {
 
     await this.authService.logout(refreshToken);
 
-    res.cookie(REFRESH_TOKEN_COOKIE_NAME, '', {
-      httpOnly: true,
-      sameSite: 'lax',
-      expires: new Date(),
-      secure: true,
-      path: '/',
-    });
+    res.clearCookie(REFRESH_TOKEN_COOKIE_NAME);
 
     res.sendStatus(HttpStatus.OK);
   }
@@ -110,8 +117,8 @@ export class AuthController {
   ) {
     this.setRefreshToken(refreshToken, res);
 
-    res
-      .status(200)
-      .json({ accessToken, user: plainToClass(CurrentUserResponse, user) });
+    const currentUserResponse = plainToClass(CurrentUserResponse, user);
+
+    res.status(200).json({ accessToken, user: currentUserResponse });
   }
 }

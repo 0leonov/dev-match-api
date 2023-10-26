@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,45 +7,45 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
-import { JwtPayload } from '../auth/interfaces';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from './entities/user-role.enum';
 import { User } from './entities/user.entity';
+import { RegistrationData } from './interfaces';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private cloudinary: CloudinaryService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(registrationData: RegistrationData) {
     const isEmailTaken = !!(await this.usersRepository.findOne({
-      where: { email: createUserDto.email },
+      where: { email: registrationData.email },
     }));
 
     if (isEmailTaken) {
       throw new ConflictException(
-        `Email ${createUserDto.email} is already taken.`,
+        `Email ${registrationData.email} is already taken.`,
       );
     }
 
     const isUsernameTaken = !!(await this.usersRepository.findOne({
-      where: { username: createUserDto.username },
+      where: { username: registrationData.username },
     }));
 
     if (isUsernameTaken) {
       throw new ConflictException(
-        `Username ${createUserDto.username} is already taken.`,
+        `Username ${registrationData.username} is already taken.`,
       );
     }
 
-    const password = await this.hashPassword(createUserDto.password);
+    const password = await this.hashPassword(registrationData.password);
 
     const user: User = await this.usersRepository.save({
-      ...createUserDto,
+      ...registrationData,
       password,
     });
 
@@ -87,22 +86,7 @@ export class UsersService {
     return user;
   }
 
-  async update(
-    id: string,
-    currentUser: JwtPayload,
-    updateUserDto: UpdateUserDto,
-  ) {
-    const isAdmin = currentUser.roles.includes(UserRole.ADMIN);
-
-    console.log(updateUserDto);
-
-    if (
-      (!isAdmin && id !== currentUser.sub) ||
-      (!isAdmin && updateUserDto.roles)
-    ) {
-      throw new ForbiddenException();
-    }
-
+  async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.findOne({
       where: { id },
     });
@@ -112,7 +96,7 @@ export class UsersService {
     }
 
     if (
-      updateUserDto.email &&
+      updateUserDto?.email &&
       (await this.usersRepository.findOne({
         where: { email: updateUserDto.email },
       }))
@@ -123,7 +107,7 @@ export class UsersService {
     }
 
     if (
-      updateUserDto.username &&
+      updateUserDto?.username &&
       (await this.usersRepository.findOne({
         where: { username: updateUserDto.username },
       }))
@@ -144,21 +128,19 @@ export class UsersService {
     });
   }
 
-  async remove(id: string, currentUser: JwtPayload) {
-    if (!currentUser.roles.includes(UserRole.ADMIN) && id !== currentUser.sub) {
-      throw new ForbiddenException();
-    }
+  async remove(id: string) {
+    const user = await this.usersRepository.findOne({ where: { id } });
 
-    const deleteResult = await this.usersRepository.delete({ id });
-
-    if (deleteResult.affected === 0) {
+    if (!user) {
       throw new NotFoundException(`User id ${id} not found.`);
     }
 
-    return { message: `User id ${id} has been deleted.` };
+    await this.usersRepository.delete({ id });
+
+    return user;
   }
 
   private async hashPassword(password: string) {
-    return await bcrypt.hash(password, 10);
+    return bcrypt.hash(password, 10);
   }
 }

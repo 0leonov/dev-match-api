@@ -1,20 +1,29 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
-import { UserRole } from '../entities/user-role.enum';
+import { ApiPropertyRole } from '../decorators/api-property-role.decorator';
 import { User } from '../entities/user.entity';
+import { UserRole } from '../enums/user-role.enum';
 
 export class UserResponse implements User {
+  @ApiProperty({ type: String })
   id: string;
+
+  @ApiProperty({ type: String })
   username: string;
+
+  @ApiProperty({ type: String })
   name: string;
+
+  @ApiPropertyRole({ required: true })
   roles: UserRole[];
 
   @Exclude()
-  createdAt: Date;
+  email: string;
 
   @Exclude()
-  email: string;
+  createdAt: Date;
 
   @Exclude()
   password: string;
@@ -24,8 +33,4 @@ export class UserResponse implements User {
 
   @Exclude()
   updatedAt: Date;
-
-  constructor(user: User) {
-    Object.assign(this, user);
-  }
 }

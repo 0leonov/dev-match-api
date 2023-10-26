@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -14,10 +14,8 @@ import { Strategies } from './strategies';
 
 @Module({
   imports: [
-    ConfigModule,
     TypeOrmModule.forFeature([RefreshToken]),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
       useFactory: jwtModuleOptions,
       inject: [ConfigService],
     }),

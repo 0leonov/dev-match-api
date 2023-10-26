@@ -8,8 +8,7 @@ import {
 } from 'typeorm';
 
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
-
-import { UserRole } from './user-role.enum';
+import { UserRole } from '../enums/user-role.enum';
 
 @Entity('users')
 export class User {

@@ -1,86 +1,76 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
   Delete,
-  ValidationPipe,
-  UsePipes,
   ParseUUIDPipe,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { plainToClass } from 'class-transformer';
-import { isUUID } from 'class-validator';
 
-import { CurrentUser, Roles } from '../auth/decorators';
+import { Public, Roles } from '../auth/decorators';
 import { RolesGuard } from '../auth/guards/role.guard';
-import { JwtPayload } from '../auth/interfaces';
 
-import { CreateUserDto } from './dto/create-user.dto';
+import {
+  ApiOperationDelete,
+  ApiOperationFindAll,
+  ApiOperationFindOne,
+  ApiOperationUpdate,
+} from './decorators/swagger.decorators';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from './entities/user-role.enum';
+import { UserRole } from './enums/user-role.enum';
 import { UserResponse } from './responses';
-import { CurrentUserResponse } from './responses/current-user.response';
 import { UsersService } from './users.service';
 
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('me')
-  async getProfile(@CurrentUser('sub') currentUserId: string) {
-    const user = await this.usersService.findOne(currentUserId);
-
-    return plainToClass(CurrentUserResponse, user);
-  }
-
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @UsePipes(new ValidationPipe())
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
-
-    return plainToClass(CurrentUserResponse, user);
-  }
-
+  @ApiOperationFindAll()
   @Get()
+  @Public()
   async findAll() {
     const users = await this.usersService.findAll();
 
     return users.map((user) => plainToClass(UserResponse, user));
   }
 
-  @Get(':idOrUsername')
-  async findOne(@Param('idOrUsername') idOrUsername: string) {
-    const user = isUUID(idOrUsername, 4)
-      ? await this.usersService.findOne(idOrUsername)
-      : await this.usersService.findOneByUsername(idOrUsername);
+  @ApiOperationFindOne()
+  @Get(':username')
+  @Public()
+  async findOne(@Param('username') username: string) {
+    const user = await this.usersService.findOneByUsername(username);
 
     return plainToClass(UserResponse, user);
   }
 
+  @ApiOperationUpdate()
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() currentUser: JwtPayload,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = this.usersService.update(id, currentUser, updateUserDto);
+    const user = this.usersService.update(id, updateUserDto);
 
     return plainToClass(UserResponse, user);
   }
 
+  @ApiOperationDelete()
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() currentUser: JwtPayload,
-  ) {
-    return this.usersService.remove(id, currentUser);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    const user = await this.usersService.remove(id);
+
+    return plainToClass(UserResponse, user);
   }
 }
