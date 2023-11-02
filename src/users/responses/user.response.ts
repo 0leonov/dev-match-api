@@ -2,9 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
-import { ApiPropertyRole } from '../decorators/api-property-role.decorator';
-import { User } from '../entities/user.entity';
-import { UserRole } from '../enums/user-role.enum';
+import {
+  ApiPropertyRole,
+  ApiPropertyGender,
+  ApiPropertyInterests,
+} from '../decorators/swagger';
+import { User } from '../entities';
+import { Role, Gender, Interest } from '../enums';
 
 export class UserResponse implements User {
   @ApiProperty({ type: String })
@@ -16,8 +20,20 @@ export class UserResponse implements User {
   @ApiProperty({ type: String })
   name: string;
 
+  @ApiProperty({ type: String })
+  avatar_url: string;
+
   @ApiPropertyRole({ required: true })
-  roles: UserRole[];
+  roles: Role[];
+
+  @ApiProperty({ type: String })
+  biography: string;
+
+  @ApiPropertyGender({ required: true })
+  gender: Gender;
+
+  @ApiPropertyInterests({ required: true })
+  interests: Interest[];
 
   @Exclude()
   email: string;

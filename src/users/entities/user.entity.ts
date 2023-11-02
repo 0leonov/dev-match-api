@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
-import { UserRole } from '../enums/user-role.enum';
+import { Gender, Interest, Role } from '../enums';
 
 @Entity('users')
 export class User {
@@ -27,13 +27,34 @@ export class User {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  avatar_url: string;
+
+  @Column({ default: '' })
+  biography: string;
+
   @Column({
     type: 'enum',
-    enum: UserRole,
-    array: true,
-    default: [UserRole.USER],
+    enum: Gender,
+    default: Gender.UNKNOWN,
   })
-  roles: UserRole[];
+  gender: Gender;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    array: true,
+    default: [Role.USER],
+  })
+  roles: Role[];
+
+  @Column({
+    type: 'enum',
+    enum: Interest,
+    array: true,
+    default: [],
+  })
+  interests: Interest[];
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.userId)
   refreshTokens: RefreshToken[];

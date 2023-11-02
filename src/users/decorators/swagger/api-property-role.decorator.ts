@@ -1,15 +1,15 @@
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { UserRole } from '../enums/user-role.enum';
+import { Role } from '../../enums';
 
 export function ApiPropertyRole(options?: ApiPropertyOptions) {
   return ApiProperty({
     required: false,
-    type: UserRole,
+    type: Role,
     isArray: true,
-    enum: UserRole,
-    example: [UserRole.USER, UserRole.ADMIN],
+    enum: Role,
+    example: [Role.USER, Role.ADMIN],
     ...options,
   });
 }

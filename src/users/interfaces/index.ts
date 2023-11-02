@@ -1,1 +1,1 @@
-export * from './registration-data';
+export * from './registration-data.interface';

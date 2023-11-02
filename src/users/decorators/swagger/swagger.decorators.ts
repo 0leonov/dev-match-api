@@ -7,7 +7,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-import { UserResponse } from '../responses';
+import { UserResponse } from '../../responses';
 
 export function ApiOperationFindAll() {
   return function (
@@ -67,7 +67,7 @@ export function ApiOperationUpdate() {
     ApiBadRequestResponse({
       description: 'Invalid id (uuid is expected).',
     })(target, propertyKey, descriptor);
-    ApiUnauthorizedResponse({ description: 'Access token is missing.' })(
+    ApiUnauthorizedResponse({ description: 'Access token is invalid.' })(
       target,
       propertyKey,
       descriptor,
@@ -97,7 +97,7 @@ export function ApiOperationDelete() {
     ApiBadRequestResponse({
       description: 'Invalid id (uuid is expected).',
     })(target, propertyKey, descriptor);
-    ApiUnauthorizedResponse({ description: 'Access token is missing.' })(
+    ApiUnauthorizedResponse({ description: 'Access token is invalid.' })(
       target,
       propertyKey,
       descriptor,

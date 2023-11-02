@@ -21,9 +21,9 @@ import {
   ApiOperationFindAll,
   ApiOperationFindOne,
   ApiOperationUpdate,
-} from './decorators/swagger.decorators';
+} from './decorators/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from './enums/user-role.enum';
+import { Role } from './enums';
 import { UserResponse } from './responses';
 import { UsersService } from './users.service';
 
@@ -53,7 +53,7 @@ export class UsersController {
   @ApiOperationUpdate()
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(Role.ADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -67,7 +67,7 @@ export class UsersController {
   @ApiOperationDelete()
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(Role.ADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     const user = await this.usersService.remove(id);
 

@@ -10,8 +10,8 @@ import { Repository } from 'typeorm';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
-import { RegistrationData } from './interfaces';
+import { User } from './entities';
+import { RegistrationDataInterface } from './interfaces';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +21,7 @@ export class UsersService {
     private cloudinary: CloudinaryService,
   ) {}
 
-  async create(registrationData: RegistrationData) {
+  async create(registrationData: RegistrationDataInterface) {
     const isEmailTaken = !!(await this.usersRepository.findOne({
       where: { email: registrationData.email },
     }));
@@ -125,6 +125,21 @@ export class UsersService {
       ...user,
       ...updateUserDto,
       password,
+    });
+  }
+
+  async updateAvatar(id: string, avatar_url: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User id ${id} not found.`);
+    }
+
+    return this.usersRepository.save({
+      ...user,
+      avatar_url,
     });
   }
 
