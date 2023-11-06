@@ -3,12 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { typeOrmModuleOptions } from './config';
-import { MeModule } from './me/me.module';
-import { UsersModule } from './users/users.module';
+import { JwtAuthGuard } from './common/guards';
+import { CloudinaryService } from './common/providers';
+import { typeOrmModuleOptions } from './config/typeOrmModuleOptions';
+import { AuthModule } from './modules/auth/auth.module';
+import { MeModule } from './modules/me/me.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -19,10 +19,10 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
-    CloudinaryModule,
     MeModule,
   ],
   providers: [
+    CloudinaryService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
