@@ -28,7 +28,7 @@ export class UpdateUserDto extends PartialType(RegisterDto) {
   @ApiPropertyInterests()
   @IsOptional()
   @IsArray()
-  @IsEnum(Gender, { each: true })
+  @IsEnum(Interest, { each: true })
   interests: Interest[];
 
   @ApiPropertyRole()
